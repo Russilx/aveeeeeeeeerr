@@ -319,19 +319,24 @@
     return data.session;
   }
 
-  async function refreshPoolCount(){
-    const { count, error } = await sb
-      .from('keys')
-      .select('*', { count: 'exact', head: true })
-      .eq('status', 'available')
+  async function refreshAllowance(){
+    const { data, error } = await sb
+      .from('user_allowances')
+      .select('max_keys, claimed_count')
       .eq('product', PRODUCT)
-      .gt('expires_at', new Date().toISOString());
+      .maybeSingle();
 
-    if (!error) {
-      poolCount.innerHTML = count > 0
-        ? `<b>${count}</b> clave${count === 1 ? '' : 's'} disponible${count === 1 ? '' : 's'} en el pool`
-        : `No hay claves disponibles en este momento`;
+    if (error || !data) {
+      poolCount.innerHTML = `No tenés cupo asignado para Complex — pedile al administrador que te asigne.`;
+      drawBtn.disabled = true;
+      return;
     }
+
+    const restantes = data.max_keys - data.claimed_count;
+    poolCount.innerHTML = restantes > 0
+      ? `Te quedan <b>${restantes}</b> de <b>${data.max_keys}</b> claves asignadas`
+      : `Ya usaste tus <b>${data.max_keys}</b> claves asignadas para Complex`;
+    drawBtn.disabled = restantes <= 0;
   }
 
   function daysUntil(dateStr){
@@ -346,17 +351,23 @@
 
     const { data, error } = await sb.rpc('claim_key', { p_product: PRODUCT });
 
-    drawBtn.disabled = false;
     drawBtn.textContent = 'Obtener clave';
 
     if (error) {
-      showMsg('Ocurrió un error al buscar una clave: ' + error.message, 'error');
+      if (error.message.includes('CUOTA_AGOTADA')) {
+        showMsg('Ya usaste todas las claves que te asignaron para Complex.', 'empty');
+      } else if (error.message.includes('SIN_CUPO_ASIGNADO')) {
+        showMsg('No tenés cupo asignado para Complex. Pedile al administrador que te asigne uno.', 'empty');
+      } else {
+        showMsg('Ocurrió un error al buscar una clave: ' + error.message, 'error');
+      }
+      await refreshAllowance();
       return;
     }
 
     if (!data || data.length === 0) {
       showMsg('No quedan claves disponibles en el pool de Complex ahora mismo.', 'empty');
-      await refreshPoolCount();
+      await refreshAllowance();
       return;
     }
 
@@ -365,7 +376,7 @@
     expiryDays.textContent = daysUntil(key.expires_at) + ' días';
     ticket.classList.add('show');
     drawBtn.style.display = 'none';
-    await refreshPoolCount();
+    await refreshAllowance();
   }
 
   copyBtn.addEventListener('click', async () => {
@@ -392,7 +403,7 @@
     const session = await requireSession();
     if (!session) return;
     userEmail.textContent = session.user.email;
-    await refreshPoolCount();
+    await refreshAllowance();
   })();
 </script>
 </body>
