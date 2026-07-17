@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bóveda de claves</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#12141a;
+    --surface:#1c1f28;
+    --surface-2:#242833;
+    --line: rgba(243,241,234,0.09);
+    --gold:#e3b341;
+    --gold-dim: rgba(227,179,65,0.15);
+    --teal:#49c5b6;
+    --teal-dim: rgba(73,197,182,0.14);
+    --red:#e2685a;
+    --text:#f3f1ea;
+    --muted:#8b909c;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(1100px 550px at 50% -10%, rgba(227,179,65,0.07), transparent 60%),
+      var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+  }
+
+  header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:20px 28px;
+    border-bottom:1px solid var(--line);
+  }
+  .mark{ display:flex; align-items:center; gap:10px; }
+  .mark span{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    letter-spacing:0.16em;
+    color:var(--muted);
+    text-transform:uppercase;
+  }
+  #userEmail{
+    font-size:13px;
+    color:var(--muted);
+  }
+  .logout{
+    background:none;
+    border:1px solid var(--line);
+    color:var(--muted);
+    padding:7px 14px;
+    border-radius:7px;
+    font-size:12px;
+    cursor:pointer;
+    margin-left:14px;
+    font-family:'Inter',sans-serif;
+  }
+  .logout:hover{ color:var(--text); border-color:#3a3f4c; }
+  .right{ display:flex; align-items:center; }
+
+  main{
+    max-width:520px;
+    margin:0 auto;
+    padding:56px 24px 60px;
+  }
+
+  .intro{ text-align:center; margin-bottom:36px; }
+  h1{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:28px;
+    margin:0 0 8px;
+  }
+  .intro p{
+    color:var(--muted);
+    font-size:14px;
+    margin:0;
+    line-height:1.6;
+  }
+
+  .pool-count{
+    text-align:center;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    color:var(--muted);
+    letter-spacing:0.05em;
+    margin-bottom:28px;
+  }
+  .pool-count b{ color:var(--gold); }
+
+  /* --- Ticket stub: la clave se "arranca" del pool --- */
+  .stub-wrap{
+    position:relative;
+    margin-bottom:26px;
+  }
+
+  .draw-btn{
+    width:100%;
+    padding:18px;
+    border-radius:12px;
+    border:1.5px dashed rgba(227,179,65,0.4);
+    background:var(--surface);
+    color:var(--gold);
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:16px;
+    cursor:pointer;
+    transition:all .15s ease;
+  }
+  .draw-btn:hover{ background:var(--gold-dim); border-color:var(--gold); }
+  .draw-btn:disabled{ opacity:0.5; cursor:not-allowed; }
+  .draw-btn:focus-visible{ outline:2px solid var(--gold); outline-offset:3px; }
+
+  .ticket{
+    display:none;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:14px;
+    position:relative;
+    overflow:hidden;
+    animation: tear .35s cubic-bezier(.2,.8,.3,1) both;
+  }
+  .ticket.show{ display:block; }
+  @keyframes tear{
+    from{ opacity:0; transform:translateY(-8px) scale(0.98); }
+    to{ opacity:1; transform:translateY(0) scale(1); }
+  }
+
+  .ticket-top{
+    padding:24px 24px 20px;
+    border-bottom:1px dashed rgba(243,241,234,0.15);
+    position:relative;
+  }
+  .ticket-top::before, .ticket-top::after{
+    content:"";
+    position:absolute;
+    bottom:-8px;
+    width:16px; height:16px;
+    border-radius:50%;
+    background:var(--bg);
+  }
+  .ticket-top::before{ left:-8px; }
+  .ticket-top::after{ right:-8px; }
+
+  .label-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:14px;
+  }
+  .label-row span{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    color:var(--muted);
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+  }
+  .badge{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    padding:3px 9px;
+    border-radius:20px;
+    background:var(--teal-dim);
+    color:var(--teal);
+  }
+
+  .code-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .code{
+    flex:1;
+    font-family:'JetBrains Mono',monospace;
+    font-size:19px;
+    font-weight:700;
+    letter-spacing:0.04em;
+    color:var(--text);
+    background:var(--surface-2);
+    padding:12px 14px;
+    border-radius:8px;
+    word-break:break-all;
+  }
+  .copy-btn{
+    flex-shrink:0;
+    padding:12px 16px;
+    border-radius:8px;
+    border:none;
+    background:var(--gold);
+    color:#1a1305;
+    font-weight:600;
+    font-size:13px;
+    cursor:pointer;
+    font-family:'Inter',sans-serif;
+  }
+  .copy-btn:hover{ filter:brightness(1.08); }
+  .copy-btn:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+
+  .ticket-bottom{
+    padding:16px 24px 20px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .expiry{
+    font-size:13px;
+    color:var(--muted);
+  }
+  .expiry b{ color:var(--text); }
+  .again-btn{
+    background:none;
+    border:none;
+    color:var(--muted);
+    font-size:12px;
+    text-decoration:underline;
+    cursor:pointer;
+    font-family:'Inter',sans-serif;
+  }
+  .again-btn:hover{ color:var(--text); }
+
+  .msg{
+    font-size:13px;
+    padding:12px 14px;
+    border-radius:8px;
+    line-height:1.5;
+    display:none;
+  }
+  .msg.show{ display:block; }
+  .msg.error{
+    background:rgba(226,104,90,0.1);
+    color:#f2a49b;
+    border:1px solid rgba(226,104,90,0.25);
+  }
+  .msg.empty{
+    background:var(--surface);
+    color:var(--muted);
+    border:1px solid var(--line);
+    text-align:center;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="mark">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="9" cy="9" r="5.5" stroke="#e3b341" stroke-width="1.6"/>
+      <path d="M13 13L20.5 20.5M20.5 20.5V15.5M20.5 20.5H15.5" stroke="#e3b341" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span>Bóveda de claves</span>
+  </div>
+  <div class="right">
+    <span id="userEmail"></span>
+    <button class="logout" id="logoutBtn">Salir</button>
+  </div>
+</header>
+
+<main>
+  <div class="intro">
+    <h1>Sacá tu clave</h1>
+    <p>Tocá el botón para tomar una clave disponible del pool. Una vez que la sacás, queda marcada como entregada.</p>
+  </div>
+
+  <div class="pool-count" id="poolCount"></div>
+
+  <div class="stub-wrap">
+    <button class="draw-btn" id="drawBtn">Obtener clave</button>
+
+    <div class="ticket" id="ticket">
+      <div class="ticket-top">
+        <div class="label-row">
+          <span>Clave asignada</span>
+          <span class="badge" id="badge">Vigente</span>
+        </div>
+        <div class="code-row">
+          <div class="code" id="codeText">—</div>
+          <button class="copy-btn" id="copyBtn">Copiar</button>
+        </div>
+      </div>
+      <div class="ticket-bottom">
+        <div class="expiry">Vence en <b id="expiryDays">—</b></div>
+        <button class="again-btn" id="againBtn">Sacar otra</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="msg" id="msg"></div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<script>
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const drawBtn = document.getElementById('drawBtn');
+  const ticket = document.getElementById('ticket');
+  const codeText = document.getElementById('codeText');
+  const copyBtn = document.getElementById('copyBtn');
+  const againBtn = document.getElementById('againBtn');
+  const msg = document.getElementById('msg');
+  const poolCount = document.getElementById('poolCount');
+  const expiryDays = document.getElementById('expiryDays');
+  const userEmail = document.getElementById('userEmail');
+  const logoutBtn = document.getElementById('logoutBtn');
+
+  function showMsg(text, cls){
+    msg.textContent = text;
+    msg.className = 'msg show ' + cls;
+  }
+  function clearMsg(){ msg.className = 'msg'; }
+
+  async function requireSession(){
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) {
+      window.location.href = 'index.html';
+      return null;
+    }
+    return data.session;
+  }
+
+  async function refreshPoolCount(){
+    const { count, error } = await supabase
+      .from('keys')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'available')
+      .gt('expires_at', new Date().toISOString());
+
+    if (!error) {
+      poolCount.innerHTML = count > 0
+        ? `<b>${count}</b> clave${count === 1 ? '' : 's'} disponible${count === 1 ? '' : 's'} en el pool`
+        : `No hay claves disponibles en este momento`;
+    }
+  }
+
+  function daysUntil(dateStr){
+    const diff = new Date(dateStr) - new Date();
+    const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+    return days;
+  }
+
+  async function drawKey(){
+    clearMsg();
+    drawBtn.disabled = true;
+    drawBtn.textContent = 'Buscando…';
+
+    // Llama a la función RPC atómica (ver schema.sql) para evitar
+    // que dos usuarios se lleven la misma clave a la vez.
+    const { data, error } = await supabase.rpc('claim_key');
+
+    drawBtn.disabled = false;
+    drawBtn.textContent = 'Obtener clave';
+
+    if (error) {
+      showMsg('Ocurrió un error al buscar una clave: ' + error.message, 'error');
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      showMsg('No quedan claves disponibles en el pool ahora mismo.', 'empty');
+      await refreshPoolCount();
+      return;
+    }
+
+    const key = data[0];
+    codeText.textContent = key.code;
+    expiryDays.textContent = daysUntil(key.expires_at) + ' días';
+    ticket.classList.add('show');
+    drawBtn.style.display = 'none';
+    await refreshPoolCount();
+  }
+
+  copyBtn.addEventListener('click', async () => {
+    await navigator.clipboard.writeText(codeText.textContent);
+    copyBtn.textContent = 'Copiado ✓';
+    setTimeout(() => { copyBtn.textContent = 'Copiar'; }, 1500);
+  });
+
+  againBtn.addEventListener('click', () => {
+    ticket.classList.remove('show');
+    drawBtn.style.display = 'block';
+    clearMsg();
+    drawKey();
+  });
+
+  drawBtn.addEventListener('click', drawKey);
+
+  logoutBtn.addEventListener('click', async () => {
+    await supabase.auth.signOut();
+    window.location.href = 'index.html';
+  });
+
+  (async function init(){
+    const session = await requireSession();
+    if (!session) return;
+    userEmail.textContent = session.user.email;
+    await refreshPoolCount();
+  })();
+</script>
+</body>
+</html>

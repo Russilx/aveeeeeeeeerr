@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Acceder — Bóveda de claves</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#12141a;
+    --surface:#1c1f28;
+    --surface-2:#242833;
+    --line: rgba(243,241,234,0.09);
+    --gold:#e3b341;
+    --gold-dim: rgba(227,179,65,0.15);
+    --teal:#49c5b6;
+    --red:#e2685a;
+    --text:#f3f1ea;
+    --muted:#8b909c;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(1100px 550px at 50% -10%, rgba(227,179,65,0.08), transparent 60%),
+      var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:100vh;
+    padding:24px;
+  }
+
+  .frame{
+    width:100%;
+    max-width:400px;
+  }
+
+  .mark{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    justify-content:center;
+    margin-bottom:28px;
+  }
+  .mark svg{ width:22px; height:22px; }
+  .mark span{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    letter-spacing:0.16em;
+    color:var(--muted);
+    text-transform:uppercase;
+  }
+
+  .card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:40px 36px 32px;
+    position:relative;
+    overflow:hidden;
+  }
+  .card::before{
+    content:"";
+    position:absolute;
+    top:0; left:0; right:0;
+    height:1px;
+    background:linear-gradient(90deg, transparent, var(--gold), transparent);
+    opacity:0.6;
+  }
+
+  h1{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:26px;
+    margin:0 0 6px;
+    letter-spacing:-0.01em;
+  }
+  .sub{
+    color:var(--muted);
+    font-size:14px;
+    margin:0 0 30px;
+    line-height:1.5;
+  }
+
+  label{
+    display:block;
+    font-size:12px;
+    color:var(--muted);
+    margin-bottom:7px;
+    letter-spacing:0.02em;
+  }
+  .field{ margin-bottom:18px; }
+  input{
+    width:100%;
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:12px 14px;
+    color:var(--text);
+    font-size:14px;
+    font-family:'Inter',sans-serif;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  input::placeholder{ color:#565c6a; }
+  input:focus{
+    outline:none;
+    border-color:var(--gold);
+    background:#282c38;
+  }
+  input:focus-visible{
+    outline:2px solid var(--gold);
+    outline-offset:2px;
+  }
+
+  button.submit{
+    width:100%;
+    margin-top:8px;
+    padding:13px;
+    border-radius:8px;
+    border:none;
+    background:var(--gold);
+    color:#1a1305;
+    font-weight:600;
+    font-size:14px;
+    font-family:'Inter',sans-serif;
+    cursor:pointer;
+    transition:filter .15s ease, transform .1s ease;
+  }
+  button.submit:hover{ filter:brightness(1.08); }
+  button.submit:active{ transform:scale(0.99); }
+  button.submit:disabled{
+    opacity:0.55;
+    cursor:not-allowed;
+  }
+  button.submit:focus-visible{
+    outline:2px solid var(--gold);
+    outline-offset:2px;
+  }
+
+  .msg{
+    font-size:13px;
+    margin-top:16px;
+    padding:10px 12px;
+    border-radius:7px;
+    display:none;
+    line-height:1.5;
+  }
+  .msg.show{ display:block; }
+  .msg.error{
+    background:rgba(226,104,90,0.1);
+    color:#f2a49b;
+    border:1px solid rgba(226,104,90,0.25);
+  }
+  .msg.info{
+    background:rgba(139,144,156,0.1);
+    color:var(--muted);
+    border:1px solid var(--line);
+  }
+
+  .foot{
+    text-align:center;
+    color:#565c6a;
+    font-size:12px;
+    margin-top:22px;
+    line-height:1.6;
+  }
+
+  @media (prefers-reduced-motion: no-preference){
+    .card{ animation: rise .4s ease both; }
+  }
+  @keyframes rise{
+    from{ opacity:0; transform:translateY(10px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<div class="frame">
+  <div class="mark">
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="9" cy="9" r="5.5" stroke="#e3b341" stroke-width="1.6"/>
+      <path d="M13 13L20.5 20.5M20.5 20.5V15.5M20.5 20.5H15.5" stroke="#e3b341" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span>Bóveda de claves</span>
+  </div>
+
+  <div class="card">
+    <h1>Acceder</h1>
+    <p class="sub">Ingresá con la cuenta que te dieron de alta. No hay registro público — si no tenés acceso, pedile una cuenta al administrador.</p>
+
+    <form id="loginForm">
+      <div class="field">
+        <label for="email">Correo</label>
+        <input id="email" type="email" placeholder="tu@correo.com" required autocomplete="username">
+      </div>
+      <div class="field">
+        <label for="password">Contraseña</label>
+        <input id="password" type="password" placeholder="••••••••" required autocomplete="current-password">
+      </div>
+      <button class="submit" type="submit" id="submitBtn">Ingresar</button>
+      <div class="msg" id="msg"></div>
+    </form>
+  </div>
+
+  <p class="foot">Acceso restringido · cuentas creadas por el administrador</p>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<script>
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const form = document.getElementById('loginForm');
+  const msg = document.getElementById('msg');
+  const btn = document.getElementById('submitBtn');
+
+  function showMsg(text, type){
+    msg.textContent = text;
+    msg.className = 'msg show ' + type;
+  }
+
+  // Si ya hay sesión activa, ir directo al dashboard
+  supabase.auth.getSession().then(({ data }) => {
+    if (data.session) window.location.href = 'dashboard.html';
+  });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    btn.disabled = true;
+    btn.textContent = 'Ingresando…';
+    msg.className = 'msg';
+
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      showMsg('No pudimos iniciar sesión: ' + error.message, 'error');
+      btn.disabled = false;
+      btn.textContent = 'Ingresar';
+      return;
+    }
+
+    window.location.href = 'dashboard.html';
+  });
+</script>
+</body>
+</html>
