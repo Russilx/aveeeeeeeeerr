@@ -296,7 +296,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="config.js"></script>
 <script>
-  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   const drawBtn = document.getElementById('drawBtn');
   const ticket = document.getElementById('ticket');
@@ -316,7 +316,7 @@
   function clearMsg(){ msg.className = 'msg'; }
 
   async function requireSession(){
-    const { data } = await supabase.auth.getSession();
+    const { data } = await sb.auth.getSession();
     if (!data.session) {
       window.location.href = 'index.html';
       return null;
@@ -325,7 +325,7 @@
   }
 
   async function refreshPoolCount(){
-    const { count, error } = await supabase
+    const { count, error } = await sb
       .from('keys')
       .select('*', { count: 'exact', head: true })
       .eq('status', 'available')
@@ -351,7 +351,7 @@
 
     // Llama a la función RPC atómica (ver schema.sql) para evitar
     // que dos usuarios se lleven la misma clave a la vez.
-    const { data, error } = await supabase.rpc('claim_key');
+    const { data, error } = await sb.rpc('claim_key');
 
     drawBtn.disabled = false;
     drawBtn.textContent = 'Obtener clave';
@@ -391,7 +391,7 @@
   drawBtn.addEventListener('click', drawKey);
 
   logoutBtn.addEventListener('click', async () => {
-    await supabase.auth.signOut();
+    await sb.auth.signOut();
     window.location.href = 'index.html';
   });
 
