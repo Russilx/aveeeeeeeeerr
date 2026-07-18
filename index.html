@@ -184,6 +184,45 @@
   @media (max-width:600px){
     input{ font-size:16px; }
   }
+
+  /* --- Reproductor de música de fondo --- */
+  .music-player{
+    position:fixed;
+    bottom:20px;
+    right:20px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:30px;
+    padding:8px 14px 8px 8px;
+    z-index:10;
+  }
+  .music-toggle{
+    width:34px; height:34px;
+    flex-shrink:0;
+    border-radius:50%;
+    border:none;
+    background:var(--gold);
+    color:#1a1305;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:14px;
+  }
+  .music-toggle:hover{ filter:brightness(1.08); }
+  .music-toggle:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+  .music-volume{
+    width:70px;
+    accent-color:var(--gold);
+    cursor:pointer;
+  }
+  @media (max-width:480px){
+    .music-player{ bottom:14px; right:14px; padding:7px 12px 7px 7px; }
+    .music-volume{ width:56px; }
+  }
 </style>
 </head>
 <body>
@@ -218,8 +257,65 @@
   <p class="foot">Acceso restringido · cuentas creadas por el administrador</p>
 </div>
 
+<div class="music-player">
+  <button class="music-toggle" id="musicToggle" aria-label="Reproducir música" title="Reproducir música">▶</button>
+  <input type="range" class="music-volume" id="musicVolume" min="0" max="100" value="40" aria-label="Volumen">
+</div>
+
+<audio id="bgAudio" preload="none"></audio>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="config.js"></script>
+<script src="music-config.js"></script>
+<script>
+  // --- Reproductor de música de fondo, con playlist rotativa ---
+  const bgAudio = document.getElementById('bgAudio');
+  const musicToggle = document.getElementById('musicToggle');
+  const musicVolume = document.getElementById('musicVolume');
+  let trackIndex = 0;
+  let isPlaying = false;
+
+  function loadTrack(i){
+    if (!MUSIC_TRACKS || MUSIC_TRACKS.length === 0) return;
+    trackIndex = i % MUSIC_TRACKS.length;
+    bgAudio.src = MUSIC_TRACKS[trackIndex];
+  }
+
+  function playNext(){
+    loadTrack(trackIndex + 1);
+    bgAudio.play().catch(() => {});
+  }
+
+  bgAudio.addEventListener('ended', playNext);
+  bgAudio.volume = musicVolume.value / 100;
+
+  if (MUSIC_TRACKS && MUSIC_TRACKS.length > 0) {
+    loadTrack(0);
+  } else {
+    musicToggle.disabled = true;
+    musicToggle.style.display = 'none';
+    musicVolume.style.display = 'none';
+  }
+
+  musicToggle.addEventListener('click', () => {
+    if (isPlaying) {
+      bgAudio.pause();
+      musicToggle.textContent = '▶';
+      musicToggle.setAttribute('aria-label', 'Reproducir música');
+      musicToggle.setAttribute('title', 'Reproducir música');
+    } else {
+      bgAudio.play().catch(() => {});
+      musicToggle.textContent = '❚❚';
+      musicToggle.setAttribute('aria-label', 'Pausar música');
+      musicToggle.setAttribute('title', 'Pausar música');
+    }
+    isPlaying = !isPlaying;
+  });
+
+  musicVolume.addEventListener('input', () => {
+    bgAudio.volume = musicVolume.value / 100;
+  });
+</script>
 <script>
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
