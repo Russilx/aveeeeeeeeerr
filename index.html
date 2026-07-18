@@ -177,6 +177,51 @@
     from{ opacity:0; transform:translateY(10px); }
     to{ opacity:1; transform:translateY(0); }
   }
+
+  .music-toggle{
+    position:fixed;
+    bottom:20px;
+    right:20px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:10px 16px;
+    border-radius:30px;
+    border:1px solid var(--line);
+    background:var(--surface);
+    color:var(--muted);
+    font-size:12px;
+    font-family:'Inter',sans-serif;
+    cursor:pointer;
+    transition:all .15s ease;
+    z-index:10;
+  }
+  .music-toggle:hover{ border-color:var(--gold); color:var(--text); }
+  .music-toggle:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+  .music-toggle .bars{
+    display:flex;
+    align-items:flex-end;
+    gap:2px;
+    height:12px;
+  }
+  .music-toggle .bars span{
+    width:3px;
+    background:var(--gold);
+    border-radius:1px;
+    opacity:0.4;
+  }
+  .music-toggle.playing .bars span{
+    opacity:1;
+    animation: bar 0.9s ease-in-out infinite;
+  }
+  .music-toggle.playing .bars span:nth-child(1){ height:5px; animation-delay:0s; }
+  .music-toggle.playing .bars span:nth-child(2){ height:11px; animation-delay:0.15s; }
+  .music-toggle.playing .bars span:nth-child(3){ height:7px; animation-delay:0.3s; }
+  .music-toggle:not(.playing) .bars span{ height:4px; }
+  @keyframes bar{
+    0%, 100%{ transform:scaleY(0.4); }
+    50%{ transform:scaleY(1); }
+  }
 </style>
 </head>
 <body>
@@ -211,6 +256,14 @@
   <p class="foot">Acceso restringido · cuentas creadas por el administrador</p>
 </div>
 
+<audio id="bgMusic" loop preload="none">
+  <source src="music.mp3" type="audio/mpeg">
+</audio>
+<button class="music-toggle" id="musicToggle" type="button">
+  <span class="bars"><span></span><span></span><span></span></span>
+  <span id="musicLabel">Música</span>
+</button>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="config.js"></script>
 <script>
@@ -225,8 +278,8 @@
     msg.className = 'msg show ' + type;
   }
 
-  // Si ya hay sesión activa, ir directo al dashboard
- sb.auth.getSession().then(({ data }) => {
+  // Si ya hay sesión activa, ir directo al selector de productos
+  sb.auth.getSession().then(({ data }) => {
     if (data.session) window.location.href = 'dashboard.html';
   });
 
@@ -249,6 +302,46 @@
     }
 
     window.location.href = 'dashboard.html';
+  });
+
+  // --- Música de fondo ---
+  const bgMusic = document.getElementById('bgMusic');
+  const musicToggle = document.getElementById('musicToggle');
+  const musicLabel = document.getElementById('musicLabel');
+  let musicStarted = false;
+
+  function setPlayingUI(isPlaying){
+    musicToggle.classList.toggle('playing', isPlaying);
+    musicLabel.textContent = isPlaying ? 'Música' : 'Música (pausada)';
+  }
+
+  async function startMusic(){
+    if (musicStarted) return;
+    musicStarted = true;
+    try {
+      await bgMusic.play();
+      setPlayingUI(true);
+    } catch (e) {
+      // El navegador bloqueó el autoplay; se habilita con el botón
+      musicStarted = false;
+      setPlayingUI(false);
+    }
+  }
+
+  // Apenas la persona toca o escribe algo en la página, arranca la música
+  ['click', 'keydown', 'touchstart'].forEach(evt => {
+    document.addEventListener(evt, startMusic, { once: true, passive: true });
+  });
+
+  musicToggle.addEventListener('click', () => {
+    if (bgMusic.paused) {
+      bgMusic.play();
+      setPlayingUI(true);
+      musicStarted = true;
+    } else {
+      bgMusic.pause();
+      setPlayingUI(false);
+    }
   });
 </script>
 </body>
