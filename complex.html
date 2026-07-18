@@ -239,6 +239,37 @@
     border:1px solid var(--line);
     text-align:center;
   }
+  .duration-picker{
+    display:grid;
+    grid-template-columns:repeat(5, 1fr);
+    gap:8px;
+    margin-bottom:18px;
+  }
+  .duration-picker.four-cols{ grid-template-columns:repeat(4, 1fr); }
+  @media (max-width: 480px){
+    .duration-picker{ grid-template-columns:repeat(3, 1fr); }
+  }
+  .dur-btn{
+    padding:11px 6px;
+    border-radius:9px;
+    border:1px solid var(--line);
+    background:var(--surface);
+    color:var(--muted);
+    font-size:12px;
+    font-family:'Inter',sans-serif;
+    font-weight:500;
+    cursor:pointer;
+    text-align:center;
+    transition:all .15s ease;
+  }
+  .dur-btn:hover{ border-color:rgba(227,179,65,0.4); color:var(--text); }
+  .dur-btn.active{
+    background:var(--gold-dim);
+    border-color:var(--gold);
+    color:var(--gold);
+    font-weight:600;
+  }
+  .dur-btn:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
 </style>
 </head>
 <body>
@@ -263,6 +294,14 @@
 
   <div class="pool-count" id="poolCount"></div>
 
+  <div class="duration-picker" id="durationPicker">
+    <button class="dur-btn active" data-value="1_dia">1 día</button>
+    <button class="dur-btn" data-value="semanal">Semanal</button>
+    <button class="dur-btn" data-value="mensual">Mensual</button>
+    <button class="dur-btn" data-value="trimestral">Trimestral</button>
+    <button class="dur-btn" data-value="permanente">Permanente</button>
+  </div>
+
   <div class="stub-wrap">
     <button class="draw-btn" id="drawBtn">Obtener clave</button>
 
@@ -278,7 +317,7 @@
         </div>
       </div>
       <div class="ticket-bottom">
-        <div class="expiry">Vence en <b id="expiryDays">—</b></div>
+        <div class="expiry" id="expiryLabel">Vence en <b id="expiryDays">—</b></div>
         <button class="again-btn" id="againBtn">Sacar otra</button>
       </div>
     </div>
@@ -301,6 +340,7 @@
   const msg = document.getElementById('msg');
   const poolCount = document.getElementById('poolCount');
   const expiryDays = document.getElementById('expiryDays');
+  const expiryLabel = document.getElementById('expiryLabel');
   const userEmail = document.getElementById('userEmail');
   const logoutBtn = document.getElementById('logoutBtn');
 
@@ -359,6 +399,17 @@
     drawBtn.disabled = false;
   }
 
+  const durationPicker = document.getElementById('durationPicker');
+  let selectedDuration = '1_dia';
+
+  durationPicker.addEventListener('click', (e) => {
+    const btn = e.target.closest('.dur-btn');
+    if (!btn) return;
+    durationPicker.querySelectorAll('.dur-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedDuration = btn.dataset.value;
+  });
+
   function daysUntil(dateStr){
     const diff = new Date(dateStr) - new Date();
     return Math.ceil(diff / (1000 * 60 * 60 * 24));
@@ -369,7 +420,10 @@
     drawBtn.disabled = true;
     drawBtn.textContent = 'Buscando…';
 
-    const { data, error } = await sb.rpc('claim_key', { p_product: PRODUCT });
+    const { data, error } = await sb.rpc('claim_key', {
+      p_product: PRODUCT,
+      p_duration_type: selectedDuration
+    });
 
     drawBtn.textContent = 'Obtener clave';
 
@@ -378,6 +432,8 @@
         showMsg('Ya usaste todas las claves que te asignaron para Complex.', 'empty');
       } else if (error.message.includes('SIN_CUPO_ASIGNADO')) {
         showMsg('No tenés cupo asignado para Complex. Pedile al administrador que te asigne uno.', 'empty');
+      } else if (error.message.includes('DURACION_INVALIDA')) {
+        showMsg('Esa duración no está disponible para este producto.', 'error');
       } else {
         showMsg('Ocurrió un error al buscar una clave: ' + error.message, 'error');
       }
@@ -386,16 +442,21 @@
     }
 
     if (!data || data.length === 0) {
-      showMsg('No quedan claves disponibles en el pool de Complex ahora mismo.', 'empty');
+      showMsg('No quedan claves de esa duración en el pool de Complex ahora mismo.', 'empty');
       await refreshAllowance();
       return;
     }
 
     const key = data[0];
     codeText.textContent = key.code;
-    expiryDays.textContent = daysUntil(key.expires_at) + ' días';
+    if (key.expires_at) {
+      expiryLabel.innerHTML = `Vence en <b id="expiryDays">${daysUntil(key.expires_at)} días</b>`;
+    } else {
+      expiryLabel.innerHTML = `<b>No vence — permanente</b>`;
+    }
     ticket.classList.add('show');
     drawBtn.style.display = 'none';
+    durationPicker.style.display = 'none';
     await refreshAllowance();
   }
 
@@ -408,6 +469,7 @@
   againBtn.addEventListener('click', () => {
     ticket.classList.remove('show');
     drawBtn.style.display = 'block';
+    durationPicker.style.display = 'grid';
     clearMsg();
     drawKey();
   });
