@@ -291,10 +291,37 @@
 
   if (MUSIC_TRACKS && MUSIC_TRACKS.length > 0) {
     loadTrack(0);
+    startPlaying(); // por si el navegador ya permite autoplay (visitas anteriores al sitio)
   } else {
     musicToggle.disabled = true;
     musicToggle.style.display = 'none';
     musicVolume.style.display = 'none';
+  }
+
+  function startPlaying(){
+    if (isPlaying) return;
+    bgAudio.play().then(() => {
+      isPlaying = true;
+      musicToggle.textContent = '❚❚';
+      musicToggle.setAttribute('aria-label', 'Pausar música');
+      musicToggle.setAttribute('title', 'Pausar música');
+    }).catch(() => {});
+  }
+
+  // Los navegadores no dejan reproducir sonido automáticamente sin
+  // que haya habido antes una interacción del usuario con la página.
+  // Por eso arrancamos la música apenas detectamos el primer clic,
+  // toque o tecla en cualquier parte (no hace falta que sea el botón).
+  function handleFirstInteraction(){
+    startPlaying();
+    document.removeEventListener('click', handleFirstInteraction);
+    document.removeEventListener('touchstart', handleFirstInteraction);
+    document.removeEventListener('keydown', handleFirstInteraction);
+  }
+  if (MUSIC_TRACKS && MUSIC_TRACKS.length > 0) {
+    document.addEventListener('click', handleFirstInteraction);
+    document.addEventListener('touchstart', handleFirstInteraction);
+    document.addEventListener('keydown', handleFirstInteraction);
   }
 
   musicToggle.addEventListener('click', () => {
@@ -303,13 +330,10 @@
       musicToggle.textContent = '▶';
       musicToggle.setAttribute('aria-label', 'Reproducir música');
       musicToggle.setAttribute('title', 'Reproducir música');
+      isPlaying = false;
     } else {
-      bgAudio.play().catch(() => {});
-      musicToggle.textContent = '❚❚';
-      musicToggle.setAttribute('aria-label', 'Pausar música');
-      musicToggle.setAttribute('title', 'Pausar música');
+      startPlaying();
     }
-    isPlaying = !isPlaying;
   });
 
   musicVolume.addEventListener('input', () => {
