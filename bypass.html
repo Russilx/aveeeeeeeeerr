@@ -306,7 +306,7 @@
 </head>
 <body>
 
-<video class="bg-video" autoplay muted loop playsinline>
+<video class="bg-video" id="bgVideo" autoplay muted loop playsinline webkit-playsinline="true">
   <source src="background.mp4" type="video/mp4">
 </video>
 <div class="bg-overlay"></div>
@@ -537,6 +537,21 @@
     userEmail.textContent = session.user.email;
     await refreshAllowance();
   })();
+
+  // --- Forzar reproducción del video en iOS (Bajo Consumo lo suele congelar) ---
+  const bgVideo = document.getElementById('bgVideo');
+  function tryPlayVideo(){
+    if (!bgVideo) return;
+    const p = bgVideo.play();
+    if (p && p.catch) p.catch(() => { /* se reintenta con el próximo toque */ });
+  }
+  tryPlayVideo();
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) tryPlayVideo();
+  });
+  ['click', 'touchstart'].forEach(evt => {
+    document.addEventListener(evt, tryPlayVideo, { passive: true });
+  });
 </script>
 </body>
 </html>
