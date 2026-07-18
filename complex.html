@@ -101,6 +101,32 @@
   }
   .pool-count b{ color:var(--gold); }
 
+  .duration-grid{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:10px;
+    margin-bottom:24px;
+  }
+  .duration-btn{
+    padding:12px 8px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:var(--surface);
+    color:var(--muted);
+    font-family:'Inter',sans-serif;
+    font-size:13px;
+    font-weight:500;
+    cursor:pointer;
+    transition:all .15s ease;
+  }
+  .duration-btn:hover{ border-color:#3a3f4c; color:var(--text); }
+  .duration-btn.active{
+    border-color:var(--gold);
+    background:var(--gold-dim);
+    color:var(--gold);
+  }
+  .duration-btn:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+
   .stub-wrap{ position:relative; margin-bottom:26px; }
 
   .draw-btn{
@@ -332,6 +358,14 @@
 
   <div class="pool-count" id="poolCount"></div>
 
+  <div class="duration-grid" id="durationGrid">
+    <button class="duration-btn active" data-duration="daily">1 día</button>
+    <button class="duration-btn" data-duration="weekly">Semanal</button>
+    <button class="duration-btn" data-duration="monthly">Mensual</button>
+    <button class="duration-btn" data-duration="quarterly">Trimestral</button>
+    <button class="duration-btn" data-duration="permanent">Permanente</button>
+  </div>
+
   <div class="stub-wrap">
     <button class="draw-btn" id="drawBtn">Obtener clave</button>
 
@@ -360,8 +394,19 @@
 <script src="config.js"></script>
 <script>
   const PRODUCT = 'complex';
+  const PRODUCT_LABEL = 'Complex';
+  const DURATION_LABELS = {
+    daily: '1 día',
+    weekly: 'Semanal',
+    monthly: 'Mensual',
+    quarterly: 'Trimestral',
+    permanent: 'Permanente'
+  };
+  let selectedDuration = 'daily';
+
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+  const durationGrid = document.getElementById('durationGrid');
   const drawBtn = document.getElementById('drawBtn');
   const ticket = document.getElementById('ticket');
   const codeText = document.getElementById('codeText');
@@ -394,12 +439,13 @@
       .select('*', { count: 'exact', head: true })
       .eq('status', 'available')
       .eq('product', PRODUCT)
+      .eq('duration', selectedDuration)
       .gt('expires_at', new Date().toISOString());
 
     if (!error) {
       poolCount.innerHTML = count > 0
         ? `<b>${count}</b> clave${count === 1 ? '' : 's'} disponible${count === 1 ? '' : 's'} en el pool`
-        : `No hay claves disponibles en este momento`;
+        : `No hay claves "${DURATION_LABELS[selectedDuration]}" disponibles en ${PRODUCT_LABEL} ahora mismo`;
     }
   }
 
@@ -413,7 +459,7 @@
     drawBtn.disabled = true;
     drawBtn.textContent = 'Buscando…';
 
-    const { data, error } = await sb.rpc('claim_key', { p_product: PRODUCT });
+    const { data, error } = await sb.rpc('claim_key', { p_product: PRODUCT, p_duration: selectedDuration });
 
     drawBtn.disabled = false;
     drawBtn.textContent = 'Obtener clave';
@@ -424,7 +470,7 @@
     }
 
     if (!data || data.length === 0) {
-      showMsg('No quedan claves disponibles en el pool de Complex ahora mismo.', 'empty');
+      showMsg(`No quedan claves "${DURATION_LABELS[selectedDuration]}" disponibles en el pool de ${PRODUCT_LABEL} ahora mismo.`, 'empty');
       await refreshPoolCount();
       return;
     }
@@ -451,6 +497,20 @@
   });
 
   drawBtn.addEventListener('click', drawKey);
+
+  durationGrid.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.duration-btn');
+    if (!btn || btn.classList.contains('active')) return;
+
+    durationGrid.querySelectorAll('.duration-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedDuration = btn.dataset.duration;
+
+    ticket.classList.remove('show');
+    drawBtn.style.display = 'block';
+    clearMsg();
+    await refreshPoolCount();
+  });
 
   logoutBtn.addEventListener('click', async () => {
     await sb.auth.signOut();
