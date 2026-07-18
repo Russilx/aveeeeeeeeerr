@@ -21,19 +21,14 @@
     --muted:#8b909c;
   }
   *{box-sizing:border-box;}
-  html{
-    overscroll-behavior-y:none;
-  }
   body{
     margin:0;
     min-height:100vh;
-    min-height:100dvh;
     background:
       radial-gradient(1100px 550px at 50% -10%, rgba(227,179,65,0.07), transparent 60%),
       var(--bg);
     color:var(--text);
     font-family:'Inter',sans-serif;
-    overscroll-behavior-y:none;
   }
 
   header{
@@ -51,7 +46,6 @@
     display:flex;
     align-items:center;
     gap:6px;
-    text-shadow:0 1px 6px rgba(0,0,0,0.6);
   }
   .mark a:hover{ color:var(--text); }
   .mark .sep{ color:var(--line); }
@@ -61,9 +55,8 @@
     letter-spacing:0.16em;
     color:var(--gold);
     text-transform:uppercase;
-    text-shadow:0 1px 6px rgba(0,0,0,0.6);
   }
-  #userEmail{ font-size:13px; color:var(--muted); text-shadow:0 1px 6px rgba(0,0,0,0.6); }
+  #userEmail{ font-size:13px; color:var(--muted); }
   .logout{
     background:none;
     border:1px solid var(--line);
@@ -90,14 +83,12 @@
     font-weight:600;
     font-size:28px;
     margin:0 0 8px;
-    text-shadow:0 2px 12px rgba(0,0,0,0.65);
   }
   .intro p{
     color:var(--muted);
     font-size:14px;
     margin:0;
     line-height:1.6;
-    text-shadow:0 1px 8px rgba(0,0,0,0.55);
   }
 
   .pool-count{
@@ -107,7 +98,6 @@
     color:var(--muted);
     letter-spacing:0.05em;
     margin-bottom:28px;
-    text-shadow:0 1px 6px rgba(0,0,0,0.6);
   }
   .pool-count b{ color:var(--gold); }
 
@@ -249,69 +239,78 @@
     border:1px solid var(--line);
     text-align:center;
   }
-  .duration-picker{
-    display:grid;
-    grid-template-columns:repeat(5, 1fr);
-    gap:8px;
-    margin-bottom:18px;
-  }
-  .duration-picker.four-cols{ grid-template-columns:repeat(4, 1fr); }
-  @media (max-width: 480px){
-    .duration-picker{ grid-template-columns:repeat(3, 1fr); }
-  }
-  .dur-btn{
-    padding:11px 6px;
-    border-radius:9px;
-    border:1px solid var(--line);
-    background:var(--surface);
-    color:var(--muted);
-    font-size:12px;
-    font-family:'Inter',sans-serif;
-    font-weight:500;
-    cursor:pointer;
-    text-align:center;
-    transition:all .15s ease;
-  }
-  .dur-btn:hover{ border-color:rgba(227,179,65,0.4); color:var(--text); }
-  .dur-btn.active{
-    background:var(--gold-dim);
-    border-color:var(--gold);
-    color:var(--gold);
-    font-weight:600;
-  }
-  .dur-btn:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
 
-  .bg-video{
+  /* --- Borde de ticket en los costados (motivo perforado) --- */
+  .side-deco{
     position:fixed;
-    inset:0;
-    width:100%;
-    height:100vh;
-    height:100dvh;
-    object-fit:contain;
-    background:var(--bg);
-    transform:translateZ(0);
-    z-index:-2;
+    top:0; bottom:0;
+    width:88px;
+    display:none;
+    pointer-events:none;
+    z-index:0;
+    --side-accent: var(--teal);
   }
-  .bg-overlay{
-    position:fixed;
-    inset:0;
-    width:100%;
-    height:100vh;
-    height:100dvh;
-    background:
-      radial-gradient(1100px 550px at 50% -10%, rgba(227,179,65,0.06), transparent 60%),
-      rgba(18,20,26,0.5);
-    z-index:-1;
+  .side-deco.side-left{ left:0; }
+  .side-deco.side-right{ right:0; }
+  .side-glow{
+    position:absolute;
+    top:50%; left:50%;
+    width:260px; height:520px;
+    transform:translate(-50%,-50%);
+    background:radial-gradient(circle, rgba(73,197,182,0.10), transparent 70%);
+  }
+  .side-line{
+    position:absolute;
+    top:96px; bottom:56px;
+    left:50%;
+    width:1px;
+    transform:translateX(-50%);
+    background:repeating-linear-gradient(to bottom, var(--side-accent) 0 3px, transparent 3px 15px);
+    opacity:0.4;
+  }
+  .side-line::before, .side-line::after{
+    content:"";
+    position:absolute;
+    left:50%;
+    width:9px; height:9px;
+    border-radius:50%;
+    background:var(--bg);
+    border:1px solid var(--side-accent);
+    opacity:0.7;
+    transform:translateX(-50%);
+  }
+  .side-line::before{ top:-5px; }
+  .side-line::after{ bottom:-5px; }
+  .side-label{
+    position:absolute;
+    top:50%; left:50%;
+    transform:translate(-50%,-50%) rotate(180deg);
+    writing-mode:vertical-rl;
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    letter-spacing:0.4em;
+    color:var(--side-accent);
+    opacity:0.3;
+    white-space:nowrap;
+    text-transform:uppercase;
+  }
+  @media (min-width:1180px){
+    .side-deco{ display:block; }
   }
 </style>
 </head>
 <body>
 
-<video class="bg-video" id="bgVideo" autoplay muted loop playsinline webkit-playsinline="true">
-  <source src="background.mp4" type="video/mp4">
-</video>
-<div class="bg-overlay"></div>
-
+<div class="side-deco side-left" aria-hidden="true">
+  <div class="side-glow"></div>
+  <div class="side-line"></div>
+  <div class="side-label">COMPLEX · COMPLEX · COMPLEX · COMPLEX</div>
+</div>
+<div class="side-deco side-right" aria-hidden="true">
+  <div class="side-glow"></div>
+  <div class="side-line"></div>
+  <div class="side-label">COMPLEX · COMPLEX · COMPLEX · COMPLEX</div>
+</div>
 
 <header>
   <div class="mark">
@@ -333,14 +332,6 @@
 
   <div class="pool-count" id="poolCount"></div>
 
-  <div class="duration-picker" id="durationPicker">
-    <button class="dur-btn active" data-value="1_dia">1 día</button>
-    <button class="dur-btn" data-value="semanal">Semanal</button>
-    <button class="dur-btn" data-value="mensual">Mensual</button>
-    <button class="dur-btn" data-value="trimestral">Trimestral</button>
-    <button class="dur-btn" data-value="permanente">Permanente</button>
-  </div>
-
   <div class="stub-wrap">
     <button class="draw-btn" id="drawBtn">Obtener clave</button>
 
@@ -356,7 +347,7 @@
         </div>
       </div>
       <div class="ticket-bottom">
-        <div class="expiry" id="expiryLabel">Vence en <b id="expiryDays">—</b></div>
+        <div class="expiry">Vence en <b id="expiryDays">—</b></div>
         <button class="again-btn" id="againBtn">Sacar otra</button>
       </div>
     </div>
@@ -379,7 +370,6 @@
   const msg = document.getElementById('msg');
   const poolCount = document.getElementById('poolCount');
   const expiryDays = document.getElementById('expiryDays');
-  const expiryLabel = document.getElementById('expiryLabel');
   const userEmail = document.getElementById('userEmail');
   const logoutBtn = document.getElementById('logoutBtn');
 
@@ -398,69 +388,20 @@
     return data.session;
   }
 
-  const durationPicker = document.getElementById('durationPicker');
-  let selectedDuration = '1_dia';
-
-  async function refreshAllowance(){
-    const { data: allowance, error: allowanceErr } = await sb
-      .from('user_allowances')
-      .select('max_keys, claimed_count')
-      .eq('product', PRODUCT)
-      .maybeSingle();
-
-    if (allowanceErr || !allowance) {
-      poolCount.innerHTML = `No tenés cupo asignado para Complex — pedile al administrador que te asigne.`;
-      drawBtn.disabled = true;
-      return;
-    }
-
-    const cupoRestante = allowance.max_keys - allowance.claimed_count;
-
-    if (cupoRestante <= 0) {
-      poolCount.innerHTML = `Ya usaste tus <b>${allowance.max_keys}</b> claves asignadas para Complex`;
-      drawBtn.disabled = true;
-      return;
-    }
-
-    // Cuántas claves hay disponibles para la duración elegida específicamente
-    const { count: disponiblesEnPool } = await sb
+  async function refreshPoolCount(){
+    const { count, error } = await sb
       .from('keys')
       .select('*', { count: 'exact', head: true })
       .eq('status', 'available')
       .eq('product', PRODUCT)
-      .eq('duration_type', selectedDuration);
+      .gt('expires_at', new Date().toISOString());
 
-    const restantes = Math.min(cupoRestante, disponiblesEnPool ?? 0);
-
-    if (restantes <= 0) {
-      poolCount.innerHTML = `No hay claves "${labelDuracion(selectedDuration)}" disponibles en Complex ahora mismo`;
-      drawBtn.disabled = true;
-      return;
+    if (!error) {
+      poolCount.innerHTML = count > 0
+        ? `<b>${count}</b> clave${count === 1 ? '' : 's'} disponible${count === 1 ? '' : 's'} en el pool`
+        : `No hay claves disponibles en este momento`;
     }
-
-    poolCount.innerHTML = `Te quedan <b>${restantes}</b> clave${restantes === 1 ? '' : 's'} "${labelDuracion(selectedDuration)}" disponible${restantes === 1 ? '' : 's'} para vos`;
-    drawBtn.disabled = false;
   }
-
-  function labelDuracion(val){
-    const labels = {
-      '1_dia': '1 día',
-      'semanal': 'Semanal',
-      'mensual': 'Mensual',
-      'trimestral': 'Trimestral',
-      'permanente': 'Permanente'
-    };
-    return labels[val] || val;
-  }
-
-  durationPicker.addEventListener('click', (e) => {
-    const btn = e.target.closest('.dur-btn');
-    if (!btn) return;
-    durationPicker.querySelectorAll('.dur-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    selectedDuration = btn.dataset.value;
-    refreshAllowance();
-  });
 
   function daysUntil(dateStr){
     const diff = new Date(dateStr) - new Date();
@@ -472,44 +413,28 @@
     drawBtn.disabled = true;
     drawBtn.textContent = 'Buscando…';
 
-    const { data, error } = await sb.rpc('claim_key', {
-      p_product: PRODUCT,
-      p_duration_type: selectedDuration
-    });
+    const { data, error } = await sb.rpc('claim_key', { p_product: PRODUCT });
 
+    drawBtn.disabled = false;
     drawBtn.textContent = 'Obtener clave';
 
     if (error) {
-      if (error.message.includes('CUOTA_AGOTADA')) {
-        showMsg('Ya usaste todas las claves que te asignaron para Complex.', 'empty');
-      } else if (error.message.includes('SIN_CUPO_ASIGNADO')) {
-        showMsg('No tenés cupo asignado para Complex. Pedile al administrador que te asigne uno.', 'empty');
-      } else if (error.message.includes('DURACION_INVALIDA')) {
-        showMsg('Esa duración no está disponible para este producto.', 'error');
-      } else {
-        showMsg('Ocurrió un error al buscar una clave: ' + error.message, 'error');
-      }
-      await refreshAllowance();
+      showMsg('Ocurrió un error al buscar una clave: ' + error.message, 'error');
       return;
     }
 
     if (!data || data.length === 0) {
-      showMsg('No quedan claves de esa duración en el pool de Complex ahora mismo.', 'empty');
-      await refreshAllowance();
+      showMsg('No quedan claves disponibles en el pool de Complex ahora mismo.', 'empty');
+      await refreshPoolCount();
       return;
     }
 
     const key = data[0];
     codeText.textContent = key.code;
-    if (key.expires_at) {
-      expiryLabel.innerHTML = `Vence en <b id="expiryDays">${daysUntil(key.expires_at)} días</b>`;
-    } else {
-      expiryLabel.innerHTML = `<b>No vence — permanente</b>`;
-    }
+    expiryDays.textContent = daysUntil(key.expires_at) + ' días';
     ticket.classList.add('show');
     drawBtn.style.display = 'none';
-    durationPicker.style.display = 'none';
-    await refreshAllowance();
+    await refreshPoolCount();
   }
 
   copyBtn.addEventListener('click', async () => {
@@ -521,7 +446,6 @@
   againBtn.addEventListener('click', () => {
     ticket.classList.remove('show');
     drawBtn.style.display = 'block';
-    durationPicker.style.display = 'grid';
     clearMsg();
     drawKey();
   });
@@ -537,23 +461,8 @@
     const session = await requireSession();
     if (!session) return;
     userEmail.textContent = session.user.email;
-    await refreshAllowance();
+    await refreshPoolCount();
   })();
-
-  // --- Forzar reproducción del video en iOS (Bajo Consumo lo suele congelar) ---
-  const bgVideo = document.getElementById('bgVideo');
-  function tryPlayVideo(){
-    if (!bgVideo) return;
-    const p = bgVideo.play();
-    if (p && p.catch) p.catch(() => { /* se reintenta con el próximo toque */ });
-  }
-  tryPlayVideo();
-  document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) tryPlayVideo();
-  });
-  ['click', 'touchstart'].forEach(evt => {
-    document.addEventListener(evt, tryPlayVideo, { passive: true });
-  });
 </script>
 </body>
 </html>
