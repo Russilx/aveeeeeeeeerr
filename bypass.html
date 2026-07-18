@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Complex — Bóveda de claves</title>
+<title>Bypass — Bóveda de claves</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
@@ -275,7 +275,8 @@
     position:fixed;
     top:0; left:0;
     width:100%; height:100%;
-    object-fit:cover;
+    object-fit:contain;
+    background:var(--bg);
     z-index:-2;
   }
   .bg-overlay{
@@ -283,8 +284,8 @@
     top:0; left:0;
     width:100%; height:100%;
     background:
-      radial-gradient(1100px 550px at 50% -10%, rgba(227,179,65,0.08), transparent 60%),
-      rgba(18,20,26,0.55);
+      radial-gradient(1100px 550px at 50% -10%, rgba(227,179,65,0.06), transparent 60%),
+      rgba(18,20,26,0.38);
     z-index:-1;
   }
 </style>
@@ -301,7 +302,7 @@
   <div class="mark">
     <a href="dashboard.html">← Productos</a>
     <span class="sep">/</span>
-    <span class="current">Complex</span>
+    <span class="current">Bypass</span>
   </div>
   <div class="right">
     <span id="userEmail"></span>
@@ -311,18 +312,17 @@
 
 <main>
   <div class="intro">
-    <h1>Sacá tu clave — Complex</h1>
-    <p>Tocá el botón para tomar una clave disponible del pool de Complex. Una vez que la sacás, queda marcada como entregada.</p>
+    <h1>Sacá tu clave — Bypass</h1>
+    <p>Tocá el botón para tomar una clave disponible del pool de Bypass. Una vez que la sacás, queda marcada como entregada.</p>
   </div>
 
   <div class="pool-count" id="poolCount"></div>
 
-  <div class="duration-picker" id="durationPicker">
+  <div class="duration-picker four-cols" id="durationPicker">
     <button class="dur-btn active" data-value="1_dia">1 día</button>
     <button class="dur-btn" data-value="semanal">Semanal</button>
     <button class="dur-btn" data-value="mensual">Mensual</button>
     <button class="dur-btn" data-value="trimestral">Trimestral</button>
-    <button class="dur-btn" data-value="permanente">Permanente</button>
   </div>
 
   <div class="stub-wrap">
@@ -352,7 +352,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="config.js"></script>
 <script>
-  const PRODUCT = 'complex';
+  const PRODUCT = 'bypass';
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   const drawBtn = document.getElementById('drawBtn');
@@ -390,7 +390,7 @@
       .maybeSingle();
 
     if (allowanceErr || !allowance) {
-      poolCount.innerHTML = `No tenés cupo asignado para Complex — pedile al administrador que te asigne.`;
+      poolCount.innerHTML = `No tenés cupo asignado para Bypass — pedile al administrador que te asigne.`;
       drawBtn.disabled = true;
       return;
     }
@@ -398,7 +398,7 @@
     const cupoRestante = allowance.max_keys - allowance.claimed_count;
 
     if (cupoRestante <= 0) {
-      poolCount.innerHTML = `Ya usaste tus <b>${allowance.max_keys}</b> claves asignadas para Complex`;
+      poolCount.innerHTML = `Ya usaste tus <b>${allowance.max_keys}</b> claves asignadas para Bypass`;
       drawBtn.disabled = true;
       return;
     }
@@ -413,7 +413,7 @@
     const restantes = Math.min(cupoRestante, disponiblesEnPool ?? 0);
 
     if (restantes <= 0) {
-      poolCount.innerHTML = `No hay claves disponibles en el pool de Complex ahora mismo`;
+      poolCount.innerHTML = `No hay claves disponibles en el pool de Bypass ahora mismo`;
       drawBtn.disabled = true;
       return;
     }
@@ -452,9 +452,9 @@
 
     if (error) {
       if (error.message.includes('CUOTA_AGOTADA')) {
-        showMsg('Ya usaste todas las claves que te asignaron para Complex.', 'empty');
+        showMsg('Ya usaste todas las claves que te asignaron para Bypass.', 'empty');
       } else if (error.message.includes('SIN_CUPO_ASIGNADO')) {
-        showMsg('No tenés cupo asignado para Complex. Pedile al administrador que te asigne uno.', 'empty');
+        showMsg('No tenés cupo asignado para Bypass. Pedile al administrador que te asigne uno.', 'empty');
       } else if (error.message.includes('DURACION_INVALIDA')) {
         showMsg('Esa duración no está disponible para este producto.', 'error');
       } else {
@@ -465,7 +465,7 @@
     }
 
     if (!data || data.length === 0) {
-      showMsg('No quedan claves de esa duración en el pool de Complex ahora mismo.', 'empty');
+      showMsg('No quedan claves de esa duración en el pool de Bypass ahora mismo.', 'empty');
       await refreshAllowance();
       return;
     }
