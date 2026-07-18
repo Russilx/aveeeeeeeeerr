@@ -221,7 +221,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="config.js"></script>
 <script>
-  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   const form = document.getElementById('loginForm');
   const msg = document.getElementById('msg');
@@ -233,7 +233,7 @@
   }
 
   // Si ya hay sesión activa, ir directo al dashboard
-  supabase.auth.getSession().then(({ data }) => {
+  sb.auth.getSession().then(({ data }) => {
     if (data.session) window.location.href = 'dashboard.html';
   });
 
@@ -246,7 +246,7 @@
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await sb.auth.signInWithPassword({ email, password });
 
     if (error) {
       showMsg('No pudimos iniciar sesión: ' + error.message, 'error');
