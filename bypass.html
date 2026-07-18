@@ -320,23 +320,43 @@
   }
 
   async function refreshAllowance(){
-    const { data, error } = await sb
+    const { data: allowance, error: allowanceErr } = await sb
       .from('user_allowances')
       .select('max_keys, claimed_count')
       .eq('product', PRODUCT)
       .maybeSingle();
 
-    if (error || !data) {
+    if (allowanceErr || !allowance) {
       poolCount.innerHTML = `No tenés cupo asignado para Bypass — pedile al administrador que te asigne.`;
       drawBtn.disabled = true;
       return;
     }
 
-    const restantes = data.max_keys - data.claimed_count;
-    poolCount.innerHTML = restantes > 0
-      ? `Te quedan <b>${restantes}</b> de <b>${data.max_keys}</b> claves asignadas`
-      : `Ya usaste tus <b>${data.max_keys}</b> claves asignadas para Bypass`;
-    drawBtn.disabled = restantes <= 0;
+    const cupoRestante = allowance.max_keys - allowance.claimed_count;
+
+    if (cupoRestante <= 0) {
+      poolCount.innerHTML = `Ya usaste tus <b>${allowance.max_keys}</b> claves asignadas para Bypass`;
+      drawBtn.disabled = true;
+      return;
+    }
+
+    // Cuántas claves hay realmente disponibles en el pool (sin importar cupo)
+    const { count: disponiblesEnPool } = await sb
+      .from('keys')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'available')
+      .eq('product', PRODUCT);
+
+    const restantes = Math.min(cupoRestante, disponiblesEnPool ?? 0);
+
+    if (restantes <= 0) {
+      poolCount.innerHTML = `No hay claves disponibles en el pool de Bypass ahora mismo`;
+      drawBtn.disabled = true;
+      return;
+    }
+
+    poolCount.innerHTML = `Te quedan <b>${restantes}</b> clave${restantes === 1 ? '' : 's'} disponible${restantes === 1 ? '' : 's'} para vos`;
+    drawBtn.disabled = false;
   }
 
   function daysUntil(dateStr){
