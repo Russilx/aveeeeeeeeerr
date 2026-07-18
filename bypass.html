@@ -362,10 +362,11 @@
   <div class="pool-count" id="poolCount"></div>
 
   <div class="duration-grid" id="durationGrid">
-    <button class="duration-btn active" data-duration="daily">1 día</button>
-    <button class="duration-btn" data-duration="weekly">Semanal</button>
-    <button class="duration-btn" data-duration="monthly">Mensual</button>
-    <button class="duration-btn" data-duration="quarterly">Trimestral</button>
+    <button class="duration-btn active" data-duration="diaria">1 día</button>
+    <button class="duration-btn" data-duration="semanal">Semanal</button>
+    <button class="duration-btn" data-duration="mensual">Mensual</button>
+    <button class="duration-btn" data-duration="trimestral">Trimestral</button>
+    <button class="duration-btn" data-duration="sin_duracion">Sin duración</button>
   </div>
 
   <div class="stub-wrap">
@@ -398,12 +399,13 @@
   const PRODUCT = 'bypass';
   const PRODUCT_LABEL = 'Bypass';
   const DURATION_LABELS = {
-    daily: '1 día',
-    weekly: 'Semanal',
-    monthly: 'Mensual',
-    quarterly: 'Trimestral'
+    diaria: '1 día',
+    semanal: 'Semanal',
+    mensual: 'Mensual',
+    trimestral: 'Trimestral',
+    sin_duracion: 'Sin duración'
   };
-  let selectedDuration = 'daily';
+  let selectedDuration = 'diaria';
 
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -435,13 +437,14 @@
   }
 
   async function refreshPoolCount(){
+    // Las claves disponibles no tienen expires_at todavía (se calcula
+    // recién al reclamarlas), así que no se filtra por fecha acá.
     const { count, error } = await sb
       .from('keys')
       .select('*', { count: 'exact', head: true })
       .eq('status', 'available')
       .eq('product', PRODUCT)
-      .eq('duration', selectedDuration)
-      .gt('expires_at', new Date().toISOString());
+      .eq('duration', selectedDuration);
 
     if (!error) {
       poolCount.innerHTML = count > 0
