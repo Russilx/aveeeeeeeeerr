@@ -11,6 +11,7 @@
 // ];
  
 const MUSIC_TRACKS = [
-  'music/tema1.mp3'
+  'musica1.mp3'
+  'musica2.mp3'
 ];
  
