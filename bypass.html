@@ -21,14 +21,19 @@
     --muted:#8b909c;
   }
   *{box-sizing:border-box;}
+  html{
+    overscroll-behavior-y:none;
+  }
   body{
     margin:0;
     min-height:100vh;
+    min-height:100dvh;
     background:
       radial-gradient(1100px 550px at 50% -10%, rgba(227,179,65,0.07), transparent 60%),
       var(--bg);
     color:var(--text);
     font-family:'Inter',sans-serif;
+    overscroll-behavior-y:none;
   }
 
   header{
@@ -276,39 +281,31 @@
   }
   .dur-btn:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
 
-  .bg-video-blur{
-    position:fixed;
-    top:0; left:0;
-    width:100%; height:100%;
-    object-fit:cover;
-    filter:blur(60px) brightness(0.55) saturate(1.1);
-    transform:scale(1.15);
-    z-index:-3;
-  }
   .bg-video{
     position:fixed;
-    top:0; left:0;
-    width:100%; height:100%;
-    object-fit:contain;
-    transform:scale(1.18);
+    inset:0;
+    width:100%;
+    height:100vh;
+    height:100dvh;
+    object-fit:cover;
+    transform:translateZ(0);
     z-index:-2;
   }
   .bg-overlay{
     position:fixed;
-    top:0; left:0;
-    width:100%; height:100%;
+    inset:0;
+    width:100%;
+    height:100vh;
+    height:100dvh;
     background:
       radial-gradient(1100px 550px at 50% -10%, rgba(227,179,65,0.06), transparent 60%),
-      rgba(18,20,26,0.38);
+      rgba(18,20,26,0.5);
     z-index:-1;
   }
 </style>
 </head>
 <body>
 
-<video class="bg-video-blur" autoplay muted loop playsinline>
-  <source src="background.mp4" type="video/mp4">
-</video>
 <video class="bg-video" autoplay muted loop playsinline>
   <source src="background.mp4" type="video/mp4">
 </video>
@@ -399,6 +396,9 @@
     return data.session;
   }
 
+  const durationPicker = document.getElementById('durationPicker');
+  let selectedDuration = '1_dia';
+
   async function refreshAllowance(){
     const { data: allowance, error: allowanceErr } = await sb
       .from('user_allowances')
@@ -420,27 +420,36 @@
       return;
     }
 
-    // Cuántas claves hay realmente disponibles en el pool (sin importar cupo)
+    // Cuántas claves hay disponibles para la duración elegida específicamente
     const { count: disponiblesEnPool } = await sb
       .from('keys')
       .select('*', { count: 'exact', head: true })
       .eq('status', 'available')
-      .eq('product', PRODUCT);
+      .eq('product', PRODUCT)
+      .eq('duration_type', selectedDuration);
 
     const restantes = Math.min(cupoRestante, disponiblesEnPool ?? 0);
 
     if (restantes <= 0) {
-      poolCount.innerHTML = `No hay claves disponibles en el pool de Bypass ahora mismo`;
+      poolCount.innerHTML = `No hay claves "${labelDuracion(selectedDuration)}" disponibles en Bypass ahora mismo`;
       drawBtn.disabled = true;
       return;
     }
 
-    poolCount.innerHTML = `Te quedan <b>${restantes}</b> clave${restantes === 1 ? '' : 's'} disponible${restantes === 1 ? '' : 's'} para vos`;
+    poolCount.innerHTML = `Te quedan <b>${restantes}</b> clave${restantes === 1 ? '' : 's'} "${labelDuracion(selectedDuration)}" disponible${restantes === 1 ? '' : 's'} para vos`;
     drawBtn.disabled = false;
   }
 
-  const durationPicker = document.getElementById('durationPicker');
-  let selectedDuration = '1_dia';
+  function labelDuracion(val){
+    const labels = {
+      '1_dia': '1 día',
+      'semanal': 'Semanal',
+      'mensual': 'Mensual',
+      'trimestral': 'Trimestral',
+      'permanente': 'Permanente'
+    };
+    return labels[val] || val;
+  }
 
   durationPicker.addEventListener('click', (e) => {
     const btn = e.target.closest('.dur-btn');
@@ -448,6 +457,7 @@
     durationPicker.querySelectorAll('.dur-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     selectedDuration = btn.dataset.value;
+    refreshAllowance();
   });
 
   function daysUntil(dateStr){
